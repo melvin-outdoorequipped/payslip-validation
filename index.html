@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Payslip Pro | Per-Day ND Rates (10% & 20% Options)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #eef2f7 0%, #e2e8f0 100%);
+            font-family: 'Inter', sans-serif;
+            padding: 2rem 1.5rem;
+            color: #0a2b36;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header-badge {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-badge h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f5b6e, #238b7a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .header-badge p {
+            color: #2c5a6e;
+            font-weight: 500;
+            margin-top: 0.3rem;
+        }
+
+        .save-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c9b8a;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .save-status.show {
+            opacity: 1;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.8rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+            padding: 1.6rem 1.8rem;
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+
+        .card-full {
+            grid-column: span 2;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-left: 4px solid #2c9b8a;
+            padding-left: 0.9rem;
+            color: #144d5c;
+        }
+
+        .mode-toggle {
+            background: #eef3fa;
+            border-radius: 40px;
+            padding: 0.3rem;
+            display: inline-flex;
+            margin-bottom: 1.2rem;
+            gap: 0.3rem;
+        }
+
+        .mode-btn {
+            padding: 0.5rem 1.2rem;
+            border-radius: 32px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #4f7e8c;
+        }
+
+        .mode-btn.active {
+            background: #2c9b8a;
+            color: white;
+            box-shadow: 0 2px 8px rgba(44,155,138,0.3);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .input-group label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #4f7e8c;
+        }
+
+        input, select {
+            background: #ffffff;
+            border: 1.5px solid #dce5ec;
+            border-radius: 24px;
+            padding: 0.7rem 1rem;
+            font-family: 'Inter', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2c9b8a;
+            box-shadow: 0 0 0 3px rgba(44,155,138,0.15);
+        }
+
+        .double-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .restday-group {
+            background: #f9fdfe;
+            border-radius: 24px;
+            padding: 1rem 1rem 0.2rem 1rem;
+            margin: 0.8rem 0 0.6rem 0;
+            border: 1px solid #cde3e9;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #1c5b68;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            accent-color: #2c9b8a;
+        }
+
+        hr {
+            margin: 1rem 0;
+            border-color: #cde3e9;
+        }
+
+        .earnings-table, .deduction-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .earnings-table td, .deduction-table td {
+            padding: 0.7rem 0;
+            border-bottom: 1px solid #e2edf2;
+        }
+
+        .earnings-table td:first-child, .deduction-table td:first-child {
+            font-weight: 500;
+        }
+
+        .earnings-table td:last-child, .deduction-table td:last-child {
+            text-align: right;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .per-day-rate {
+            font-size: 0.7rem;
+            color: #6f9aab;
+            font-weight: normal;
+            display: block;
+            margin-top: 0.2rem;
+        }
+
+        .net-pay {
+            background: #e2f0ed;
+            border-radius: 28px;
+            padding: 0.9rem 1.3rem;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 800;
+            font-size: 1.25rem;
+        }
+
+        button {
+            background: #2c9b8a;
+            border: none;
+            border-radius: 40px;
+            padding: 0.8rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            margin-top: 0.8rem;
+        }
+
+        button.small-btn {
+            width: auto;
+            padding: 0.4rem 1rem;
+            margin-top: 0;
+            font-size: 0.75rem;
+        }
+
+        .deduction-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .deduction-value {
+            font-weight: 700;
+            background: #f8f9fa;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+
+        .info-note {
+            font-size: 0.7rem;
+            color: #6f9aab;
+            margin-top: 0.8rem;
+            text-align: center;
+        }
+
+        .holiday-badge {
+            display: inline-block;
+            background: #fef5e7;
+            border-radius: 20px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.6rem;
+            color: #c97e2c;
+        }
+
+        .auto-detect-banner {
+            background: #eef3fa;
+            border-radius: 28px;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+            border-left: 4px solid #2c9b8a;
+        }
+
+        .rate-breakdown {
+            background: #f8f9fc;
+            border-radius: 20px;
+            padding: 0.8rem;
+            margin-top: 0.8rem;
+            font-size: 0.75rem;
+            border: 1px solid #e2edf2;
+        }
+
+        .perday-input-group {
+            background: #f8f9fc;
+            border-radius: 20px;
+            padding: 0.8rem;
+            margin-top: 0.5rem;
+            border: 1px solid #e2edf2;
+        }
+
+        .nd-options {
+            background: #fff5e8;
+            border-radius: 20px;
+            padding: 0.8rem;
+            margin-top: 0.5rem;
+            border: 1px solid #f0dbc0;
+        }
+
+        .nd-options label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            display: block;
+        }
+
+        .manual-holiday-section {
+            background: #fff9ef;
+            border-radius: 24px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid #f0e0c0;
+        }
+
+        .holiday-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .holiday-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid #e2edf2;
+        }
+
+        .remove-holiday {
+            color: #e67e22;
+            cursor: pointer;
+            font-size: 0.7rem;
+            background: none;
+            border: none;
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+        }
+
+        .remove-holiday:hover {
+            background: #fee0c0;
+        }
+
+        .quick-add {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .reset-btn {
+            background: #95a5a6;
+            margin-top: 0.5rem;
+        }
+
+        .reset-btn:hover {
+            background: #7f8c8d;
+        }
+
+        @media (max-width: 850px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .card-full {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header-badge">
+        <h1>Payslip ni Melvs</h1>
+    </div>
+
+    <div class="save-status" id="saveStatus">✓ Auto-saved</div>
+
+    <div class="dashboard">
+        <!-- LEFT PANEL -->
+        <div class="card">
+            <div class="card-title">📅 PERIOD & COMPENSATION</div>
+            <div class="auto-detect-banner">
+                <span>📍 <strong>Auto Holidays 2026:</strong> Eid'l Fitr (Mar 20), Eid'l Adha (Jun 6), Cebu City Charter (Feb 24), Cebu Provincial (Aug 6)</span>
+            </div>
+            
+            <div class="mode-toggle">
+                <button class="mode-btn" id="modeMonthly" onclick="setInputMode('monthly')">📊 Monthly Salary</button>
+                <button class="mode-btn" id="modePerDay" onclick="setInputMode('perday')">📆 Per-Day Rate</button>
+            </div>
+
+            <div class="double-row">
+                <div class="input-group">
+                    <label>📆 Date From</label>
+                    <input type="date" id="dateFrom">
+                </div>
+                <div class="input-group">
+                    <label>📆 Date To</label>
+                    <input type="date" id="dateTo">
+                </div>
+            </div>
+
+            <!-- MONTHLY MODE INPUTS -->
+            <div id="monthlyInputs">
+                <div class="input-group">
+                    <label>💵 Basic Monthly Salary (₱)</label>
+                    <input type="number" id="basicMonthly" step="100">
+                </div>
+                <div class="input-group">
+                    <label>💰 Monthly Allowance (Transpo & Meals) (₱)</label>
+                    <input type="number" id="allowanceMonthly" step="50">
+                </div>
+                <div class="input-group">
+                    <label>➕ Additional Monthly Allowance (₱)</label>
+                    <input type="number" id="additionalMonthly" step="50">
+                </div>
+                <div class="double-row">
+                    <div class="input-group">
+                        <label>🌙 Night Differential %</label>
+                        <select id="ndPercent">
+                            <option value="10">10% (ND 10%)</option>
+                            <option value="20">20% (ND 20%)</option>
+                            <option value="0">0% (No ND)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>🕒 Night Diff hours/day</label>
+                        <input type="number" id="ndHoursPerDay" step="0.5" min="0" max="12">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PER-DAY MODE INPUTS - No ND hours/percentage, just direct ND rates -->
+            <div id="perdayInputs" style="display: none;">
+                <div class="perday-input-group">
+                    <div class="input-group">
+                        <label>💵 Basic Pay (per day)</label>
+                        <input type="number" id="basicPerDayInput" step="10">
+                    </div>
+                    <div class="input-group">
+                        <label>🚗 Allowance (Transpo & Meals per day)</label>
+                        <input type="number" id="allowancePerDayInput" step="10">
+                    </div>
+                    <div class="input-group">
+                        <label>➕ Additional Allowance (per day)</label>
+                        <input type="number" id="additionalPerDayInput" step="5">
+                    </div>
+                </div>
+                
+                <!-- Night Differential Options - Direct per-day rates for ND 10% and ND 20% -->
+                <div class="nd-options">
+                    <label>🌙 NIGHT DIFFERENTIAL (per day)</label>
+                    <div class="double-row" style="gap: 0.8rem;">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label style="font-size:0.65rem;">ND 10% Rate</label>
+                            <input type="number" id="nd10PerDayInput" step="5" placeholder="₱62.07">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label style="font-size:0.65rem;">ND 20% Rate</label>
+                            <input type="number" id="nd20PerDayInput" step="5" placeholder="₱124.14">
+                        </div>
+                    </div>
+                    <div class="info-note" style="margin-top: 0.5rem;">Select which ND rate to apply below</div>
+                    <select id="ndPercentPerDay" style="margin-top: 0.5rem; width: 100%;">
+                        <option value="10">Apply ND 10% (₱62.07/day)</option>
+                        <option value="20">Apply ND 20% (₱124.14/day)</option>
+                        <option value="0">No Night Differential</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="restday-group">
+                <label>🛑 REST DAYS (Select up to 2 days)</label>
+                <div class="checkbox-group" id="restDaysGroup">
+                    <label><input type="checkbox" value="Sunday"> Sunday</label>
+                    <label><input type="checkbox" value="Saturday"> Saturday</label>
+                    <label><input type="checkbox" value="Monday"> Monday</label>
+                    <label><input type="checkbox" value="Tuesday"> Tuesday</label>
+                    <label><input type="checkbox" value="Wednesday"> Wednesday</label>
+                    <label><input type="checkbox" value="Thursday"> Thursday</label>
+                    <label><input type="checkbox" value="Friday"> Friday</label>
+                </div>
+            </div>
+            
+            <button id="calcBtn">⟳ RECALCULATE</button>
+            <button id="resetBtn" class="reset-btn" style="background:#95a5a6;">⟲ Reset All Data</button>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="card">
+            <div class="card-title">💰 EARNINGS BREAKDOWN</div>
+            <table class="earnings-table">
+                <tbody>
+                    <tr><td>📌 Basic Pay<div class="per-day-rate" id="basicPerDayDisplay">₱0.00 / day</div></td><td id="basicSalaryVal">₱0.00</td></tr>
+                    <tr><td>🚗 Allowance<div class="per-day-rate" id="allowancePerDayDisplay">₱0.00 / day</div></td><td id="allowanceVal">₱0.00</td></tr>
+                    <tr><td>➕ Additional Allowance<div class="per-day-rate" id="additionalPerDayDisplay">₱0.00 / day</div></td><td id="additionalVal">₱0.00</td></tr>
+                    <tr><td>🌙 Night Differential (<span id="ndPercentLabel">10%</span>)<div class="per-day-rate" id="ndPerDayDisplay">₱0.00 / day</div></td><td id="nightDiffVal">₱0.00</td></tr>
+                    <tr><td>🏖️ SPECIAL Holiday (extra)<div class="per-day-rate" id="specialPerDayInfo">—</div></td><td id="specialHolVal">₱0.00</td></tr>
+                    <tr><td>🎉 REGULAR Holiday (extra)<div class="per-day-rate" id="regularPerDayInfo">—</div></td><td id="regularHolVal">₱0.00</td></tr>
+                </tbody>
+            </table>
+            
+            <div class="rate-breakdown" id="rateSummary">
+                <strong>📊 Rate Summary:</strong><br>
+                <span id="summaryText">Loading...</span>
+            </div>
+
+            <div class="card-title" style="margin-top: 1rem;">⚙️ DEDUCTIONS <span style="font-size:0.7rem;">(click to edit)</span></div>
+            <table class="deduction-table">
+                <tbody>
+                    <tr><td><div class="deduction-row" onclick="editDeduction('sss')"><span>SSS Contribution</span><span class="deduction-value" data-deduction="sss">₱337.50</span></div></td></tr>
+                    <tr><td><div class="deduction-row" onclick="editDeduction('phil')"><span>PhilHealth</span><span class="deduction-value" data-deduction="phil">₱168.75</span></div></td></tr>
+                    <tr><td><div class="deduction-row" onclick="editDeduction('pagibig')"><span>Pag-IBIG</span><span class="deduction-value" data-deduction="pagibig">₱100.00</span></div></td></tr>
+                    <tr><td><div class="deduction-row" onclick="editDeduction('late')"><span>Late / Overbreak</span><span class="deduction-value" data-deduction="late">₱0.00</span></div></td></tr>
+                </tbody>
+            </table>
+            <div class="net-pay"><span>💵 NET PAY</span><span id="netPayAmount">₱0.00</span></div>
+        </div>
+
+        <!-- BOTTOM CARD: HOLIDAY SECTION -->
+        <div class="card card-full">
+            <div class="card-title">📆 HOLIDAY MANAGEMENT</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                <div style="flex: 1;">
+                    <strong>🤖 Auto-Detected Holidays:</strong>
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem;" id="autoHolidayList">Loading...</div>
+                    <div style="margin-top: 0.8rem;"><span style="font-weight:600;">📅 Total days:</span> <span id="totalDaysSpan">0</span> &nbsp;|&nbsp; 
+                    <span style="font-weight:600;">👔 Working days:</span> <span id="workingDaysSpan">0</span> &nbsp;|&nbsp;
+                    <span style="font-weight:600;">🛑 Rest days:</span> <span id="restDaysCountSpan">0</span></div>
+                </div>
+                
+                <div style="flex: 1.5;">
+                    <div class="manual-holiday-section">
+                        <strong>✏️ MANUAL HOLIDAYS (Auto-saved)</strong>
+                        <div class="double-row" style="margin-top: 0.8rem; gap: 0.5rem;">
+                            <input type="date" id="manualHolidayDate" placeholder="Date" style="flex:1">
+                            <input type="text" id="manualHolidayName" placeholder="Holiday name" style="flex:1.5">
+                            <select id="manualHolidayType" style="flex:0.8">
+                                <option value="regular">Regular</option>
+                                <option value="special">Special</option>
+                            </select>
+                            <button class="small-btn" onclick="addManualHoliday()" style="width:auto; margin-top:0;">+ Add</button>
+                        </div>
+                        <div class="quick-add">
+                            <span style="font-size:0.7rem;">Quick add:</span>
+                            <button class="small-btn" onclick="quickAddHoliday('2026-03-20', 'Eid\'l Fitr', 'regular')">Eid'l Fitr</button>
+                            <button class="small-btn" onclick="quickAddHoliday('2026-06-06', 'Eid\'l Adha', 'regular')">Eid'l Adha</button>
+                            <button class="small-btn" onclick="quickAddHoliday('2026-02-24', 'Cebu City Charter', 'special')">Cebu Charter</button>
+                            <button class="small-btn" onclick="quickAddHoliday('2026-08-06', 'Cebu Provincial Day', 'special')">Cebu Provincial</button>
+                        </div>
+                        <div class="holiday-list" id="manualHolidayList">
+                            <div style="color:#999; text-align:center; padding:0.5rem;">No manual holidays added</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div id="holidayBreakdownLog" style="background: #fbfefd; border-radius: 24px; padding: 0.9rem; font-size: 0.8rem; max-height: 150px; overflow-y: auto;">
+                🔍 Combined holiday breakdown (auto + manual)...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto holiday dataset
+    const AUTO_HOLIDAYS = {
+        regular: [
+            { date: "2026-01-01", name: "New Year's Day" },
+            { date: "2026-04-02", name: "Maundy Thursday" },
+            { date: "2026-04-03", name: "Good Friday" },
+            { date: "2026-04-09", name: "Araw ng Kagitingan" },
+            { date: "2026-05-01", name: "Labor Day" },
+            { date: "2026-06-12", name: "Independence Day" },
+            { date: "2026-08-31", name: "National Heroes Day" },
+            { date: "2026-11-30", name: "Bonifacio Day" },
+            { date: "2026-12-25", name: "Christmas Day" },
+            { date: "2026-12-30", name: "Rizal Day" }
+        ],
+        special: [
+            { date: "2026-02-17", name: "Chinese New Year" },
+            { date: "2026-04-04", name: "Black Saturday" },
+            { date: "2026-08-21", name: "Ninoy Aquino Day" },
+            { date: "2026-11-01", name: "All Saints' Day" },
+            { date: "2026-12-08", name: "Feast of the Immaculate Conception" },
+            { date: "2026-12-24", name: "Christmas Eve" },
+            { date: "2026-12-31", name: "Last Day of the Year" }
+        ]
+    };
+
+    let manualHolidays = [];
+    let inputMode = 'monthly';
+    let deductions = { sss: 337.5, phil: 168.75, pagibig: 100, late: 0 };
+
+    function saveAllData() {
+        const dataToSave = {
+            inputMode,
+            dateFrom: document.getElementById('dateFrom').value,
+            dateTo: document.getElementById('dateTo').value,
+            basicMonthly: document.getElementById('basicMonthly').value,
+            allowanceMonthly: document.getElementById('allowanceMonthly').value,
+            additionalMonthly: document.getElementById('additionalMonthly').value,
+            basicPerDayInput: document.getElementById('basicPerDayInput').value,
+            allowancePerDayInput: document.getElementById('allowancePerDayInput').value,
+            additionalPerDayInput: document.getElementById('additionalPerDayInput').value,
+            nd10PerDayInput: document.getElementById('nd10PerDayInput').value,
+            nd20PerDayInput: document.getElementById('nd20PerDayInput').value,
+            ndPercentPerDay: document.getElementById('ndPercentPerDay').value,
+            ndPercent: document.getElementById('ndPercent').value,
+            ndHoursPerDay: document.getElementById('ndHoursPerDay').value,
+            restDays: [],
+            deductions,
+            manualHolidays
+        };
+        
+        const restCheckboxes = document.querySelectorAll('#restDaysGroup input[type="checkbox"]');
+        restCheckboxes.forEach(cb => { if (cb.checked) dataToSave.restDays.push(cb.value); });
+        
+        localStorage.setItem('payslipProData', JSON.stringify(dataToSave));
+        const statusEl = document.getElementById('saveStatus');
+        statusEl.classList.add('show');
+        setTimeout(() => statusEl.classList.remove('show'), 1500);
+    }
+
+    function loadAllData() {
+        const saved = localStorage.getItem('payslipProData');
+        if (!saved) return false;
+        try {
+            const data = JSON.parse(saved);
+            inputMode = data.inputMode || 'monthly';
+            if (data.dateFrom) document.getElementById('dateFrom').value = data.dateFrom;
+            if (data.dateTo) document.getElementById('dateTo').value = data.dateTo;
+            if (data.basicMonthly) document.getElementById('basicMonthly').value = data.basicMonthly;
+            if (data.allowanceMonthly) document.getElementById('allowanceMonthly').value = data.allowanceMonthly;
+            if (data.additionalMonthly) document.getElementById('additionalMonthly').value = data.additionalMonthly;
+            if (data.basicPerDayInput) document.getElementById('basicPerDayInput').value = data.basicPerDayInput;
+            if (data.allowancePerDayInput) document.getElementById('allowancePerDayInput').value = data.allowancePerDayInput;
+            if (data.additionalPerDayInput) document.getElementById('additionalPerDayInput').value = data.additionalPerDayInput;
+            if (data.nd10PerDayInput) document.getElementById('nd10PerDayInput').value = data.nd10PerDayInput;
+            if (data.nd20PerDayInput) document.getElementById('nd20PerDayInput').value = data.nd20PerDayInput;
+            if (data.ndPercentPerDay) document.getElementById('ndPercentPerDay').value = data.ndPercentPerDay;
+            if (data.ndPercent) document.getElementById('ndPercent').value = data.ndPercent;
+            if (data.ndHoursPerDay) document.getElementById('ndHoursPerDay').value = data.ndHoursPerDay;
+            if (data.deductions) deductions = data.deductions;
+            if (data.manualHolidays) manualHolidays = data.manualHolidays;
+            
+            if (data.restDays) {
+                const checkboxes = document.querySelectorAll('#restDaysGroup input[type="checkbox"]');
+                checkboxes.forEach(cb => { cb.checked = data.restDays.includes(cb.value); });
+            }
+            updateDeductionDisplay();
+            updateManualHolidayList();
+            return true;
+        } catch(e) { return false; }
+    }
+
+    function updateDeductionDisplay() {
+        document.querySelector('[data-deduction="sss"]').innerText = `₱${deductions.sss.toFixed(2)}`;
+        document.querySelector('[data-deduction="phil"]').innerText = `₱${deductions.phil.toFixed(2)}`;
+        document.querySelector('[data-deduction="pagibig"]').innerText = `₱${deductions.pagibig.toFixed(2)}`;
+        document.querySelector('[data-deduction="late"]').innerText = `₱${deductions.late.toFixed(2)}`;
+    }
+
+    function getCombinedHolidays() {
+        const combined = { regular: [...AUTO_HOLIDAYS.regular], special: [...AUTO_HOLIDAYS.special] };
+        manualHolidays.forEach(h => {
+            const target = h.type === 'regular' ? combined.regular : combined.special;
+            const existingIndex = target.findIndex(ex => ex.date === h.date);
+            if (existingIndex >= 0) target[existingIndex] = { date: h.date, name: h.name };
+            else target.push({ date: h.date, name: h.name });
+        });
+        return combined;
+    }
+
+    function getHolidayInfo(dateStr, combinedHolidays) {
+        const reg = combinedHolidays.regular.find(h => h.date === dateStr);
+        if (reg) return { type: "regular", name: reg.name, extraMultiplier: 1.0 };
+        const special = combinedHolidays.special.find(h => h.date === dateStr);
+        if (special) return { type: "special", name: special.name, extraMultiplier: 0.30 };
+        return null;
+    }
+
+    function getDatesInRange(startDate, endDate) {
+        const dates = [];
+        let current = new Date(startDate);
+        const end = new Date(endDate);
+        while (current <= end) { dates.push(new Date(current)); current.setDate(current.getDate() + 1); }
+        return dates;
+    }
+
+    function formatYMD(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
+    function isRestDay(date, restDaysArray) { return restDaysArray.includes(date.toLocaleDateString('en-US', { weekday: 'long' })); }
+
+    function setInputMode(mode) {
+        inputMode = mode;
+        document.getElementById('modeMonthly').classList.toggle('active', mode === 'monthly');
+        document.getElementById('modePerDay').classList.toggle('active', mode === 'perday');
+        document.getElementById('monthlyInputs').style.display = mode === 'monthly' ? 'block' : 'none';
+        document.getElementById('perdayInputs').style.display = mode === 'perday' ? 'block' : 'none';
+        computeFullPayslip();
+        saveAllData();
+    }
+
+    window.editDeduction = function(key) {
+        const newVal = prompt(`Edit ${key.toUpperCase()} amount (₱):`, deductions[key]);
+        if (newVal !== null && !isNaN(parseFloat(newVal))) {
+            deductions[key] = parseFloat(newVal);
+            updateDeductionDisplay();
+            computeFullPayslip();
+            saveAllData();
+        }
+    };
+
+    function addManualHoliday() {
+        const date = document.getElementById('manualHolidayDate').value;
+        const name = document.getElementById('manualHolidayName').value.trim();
+        const type = document.getElementById('manualHolidayType').value;
+        if (!date || !name) { alert("Please enter both date and holiday name"); return; }
+        manualHolidays.push({ date, name, type });
+        updateManualHolidayList();
+        document.getElementById('manualHolidayDate').value = '';
+        document.getElementById('manualHolidayName').value = '';
+        computeFullPayslip();
+        saveAllData();
+    }
+
+    window.quickAddHoliday = function(date, name, type) {
+        if (!manualHolidays.some(h => h.date === date)) {
+            manualHolidays.push({ date, name, type });
+            updateManualHolidayList();
+            computeFullPayslip();
+            saveAllData();
+        } else { alert("Holiday already added"); }
+    };
+
+    window.removeManualHoliday = function(index) {
+        manualHolidays.splice(index, 1);
+        updateManualHolidayList();
+        computeFullPayslip();
+        saveAllData();
+    };
+
+    function updateManualHolidayList() {
+        const container = document.getElementById('manualHolidayList');
+        if (manualHolidays.length === 0) { container.innerHTML = '<div style="color:#999; text-align:center; padding:0.5rem;">No manual holidays added</div>'; return; }
+        container.innerHTML = manualHolidays.map((h, i) => `<div class="holiday-item"><span><strong>${h.date}</strong> - ${h.name} (${h.type.toUpperCase()})</span><button class="remove-holiday" onclick="removeManualHoliday(${i})">✖ Remove</button></div>`).join('');
+    }
+
+    function getDailyRates() {
+        if (inputMode === 'monthly') {
+            const basicMonthly = parseFloat(document.getElementById('basicMonthly').value) || 13500;
+            const allowanceMonthly = parseFloat(document.getElementById('allowanceMonthly').value) || 2500;
+            const additionalMonthly = parseFloat(document.getElementById('additionalMonthly').value) || 700;
+            return { dailyRate: basicMonthly / 22, dailyAllowance: allowanceMonthly / 22, dailyAdditional: additionalMonthly / 22 };
+        } else {
+            return {
+                dailyRate: parseFloat(document.getElementById('basicPerDayInput').value) || 620.68,
+                dailyAllowance: parseFloat(document.getElementById('allowancePerDayInput').value) || 114.94,
+                dailyAdditional: parseFloat(document.getElementById('additionalPerDayInput').value) || 32.18
+            };
+        }
+    }
+
+    function getNightDifferentialPerDay() {
+        if (inputMode === 'monthly') {
+            const ndPercent = parseFloat(document.getElementById('ndPercent').value) / 100;
+            const ndHours = parseFloat(document.getElementById('ndHoursPerDay').value) || 0;
+            const dailyRate = parseFloat(document.getElementById('basicMonthly').value) / 22;
+            const hourlyRate = dailyRate / 8;
+            return hourlyRate * ndPercent * ndHours;
+        } else {
+            const selectedND = document.getElementById('ndPercentPerDay').value;
+            if (selectedND === '10') return parseFloat(document.getElementById('nd10PerDayInput').value) || 62.07;
+            if (selectedND === '20') return parseFloat(document.getElementById('nd20PerDayInput').value) || 124.14;
+            return 0;
+        }
+    }
+
+    function getNDPercentLabel() {
+        if (inputMode === 'monthly') return (parseFloat(document.getElementById('ndPercent').value) || 0) + "%";
+        const selected = document.getElementById('ndPercentPerDay').value;
+        if (selected === '10') return "10% (₱" + (parseFloat(document.getElementById('nd10PerDayInput').value) || 62.07).toFixed(2) + "/day)";
+        if (selected === '20') return "20% (₱" + (parseFloat(document.getElementById('nd20PerDayInput').value) || 124.14).toFixed(2) + "/day)";
+        return "0%";
+    }
+
+    function computeFullPayslip() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        if (!dateFrom || !dateTo) return;
+
+        const { dailyRate, dailyAllowance, dailyAdditional } = getDailyRates();
+        const ndDailyAmount = getNightDifferentialPerDay();
+
+        const restCheckboxes = document.querySelectorAll('#restDaysGroup input[type="checkbox"]');
+        const selectedRests = [];
+        restCheckboxes.forEach(cb => { if (cb.checked) selectedRests.push(cb.value); });
+
+        const allDates = getDatesInRange(dateFrom, dateTo);
+        const totalDaysPeriod = allDates.length;
+        const combinedHolidays = getCombinedHolidays();
+        
+        let normalWorkDays = 0;
+        let regularExtraTotal = 0, specialExtraTotal = 0;
+        let regularHolidayOccurrences = [], specialHolidayOccurrences = [];
+        let holidayBreakdownEntries = [];
+        
+        for (const date of allDates) {
+            const dateStr = formatYMD(date);
+            const isRest = isRestDay(date, selectedRests);
+            const holiday = getHolidayInfo(dateStr, combinedHolidays);
+            if (!isRest) normalWorkDays++;
+            if (holiday) {
+                let baseExtra = holiday.extraMultiplier;
+                if (isRest) baseExtra = holiday.type === "regular" ? 1.60 : 0.60;
+                const extraPremium = dailyRate * baseExtra;
+                if (holiday.type === "regular") {
+                    regularExtraTotal += extraPremium;
+                    regularHolidayOccurrences.push({ dateStr, name: holiday.name, rest: isRest, extra: extraPremium });
+                } else {
+                    specialExtraTotal += extraPremium;
+                    specialHolidayOccurrences.push({ dateStr, name: holiday.name, rest: isRest, extra: extraPremium });
+                }
+                const restTag = isRest ? "🔴 REST DAY" : "⚪ Workday";
+                const percentText = holiday.type === "regular" ? (isRest ? "260% (extra 160%)" : "200% (extra 100%)") : (isRest ? "160% (extra 60%)" : "130% (extra 30%)");
+                holidayBreakdownEntries.push(`${dateStr} · ${holiday.name} · ${restTag} → ${percentText} : +₱${extraPremium.toFixed(2)}`);
+            }
+        }
+        
+        const basicTotal = dailyRate * normalWorkDays;
+        const allowanceTotal = dailyAllowance * normalWorkDays;
+        const additionalTotal = dailyAdditional * normalWorkDays;
+        const totalND = ndDailyAmount * normalWorkDays;
+        const totalGross = basicTotal + allowanceTotal + additionalTotal + totalND + specialExtraTotal + regularExtraTotal;
+        
+        const totalDeductions = deductions.sss + deductions.phil + deductions.pagibig + deductions.late;
+        const netPay = totalGross - totalDeductions;
+        
+        document.getElementById('basicSalaryVal').innerText = `₱${basicTotal.toFixed(2)}`;
+        document.getElementById('allowanceVal').innerText = `₱${allowanceTotal.toFixed(2)}`;
+        document.getElementById('additionalVal').innerText = `₱${additionalTotal.toFixed(2)}`;
+        document.getElementById('nightDiffVal').innerText = `₱${totalND.toFixed(2)}`;
+        document.getElementById('specialHolVal').innerHTML = `₱${specialExtraTotal.toFixed(2)} <span class="holiday-badge">${specialHolidayOccurrences.length} day(s)</span>`;
+        document.getElementById('regularHolVal').innerHTML = `₱${regularExtraTotal.toFixed(2)} <span class="holiday-badge">${regularHolidayOccurrences.length} day(s)</span>`;
+        
+        document.getElementById('basicPerDayDisplay').innerHTML = `₱${dailyRate.toFixed(2)} / day`;
+        document.getElementById('allowancePerDayDisplay').innerHTML = `₱${dailyAllowance.toFixed(2)} / day`;
+        document.getElementById('additionalPerDayDisplay').innerHTML = `₱${dailyAdditional.toFixed(2)} / day`;
+        document.getElementById('ndPerDayDisplay').innerHTML = `₱${ndDailyAmount.toFixed(2)} / day`;
+        document.getElementById('summaryText').innerHTML = `Basic: ₱${dailyRate.toFixed(2)}/day | Allowance: ₱${dailyAllowance.toFixed(2)}/day | Additional: ₱${dailyAdditional.toFixed(2)}/day | ND: ₱${ndDailyAmount.toFixed(2)}/day`;
+        
+        document.getElementById('totalDaysSpan').innerText = totalDaysPeriod;
+        document.getElementById('workingDaysSpan').innerText = normalWorkDays;
+        const restDaysCount = allDates.filter(d => isRestDay(d, selectedRests)).length;
+        document.getElementById('restDaysCountSpan').innerHTML = `${restDaysCount} (${selectedRests.length ? selectedRests.join(', ') : 'none'})`;
+        
+        const autoRegularInPeriod = combinedHolidays.regular.filter(h => h.date >= dateFrom && h.date <= dateTo);
+        const autoSpecialInPeriod = combinedHolidays.special.filter(h => h.date >= dateFrom && h.date <= dateTo);
+        document.getElementById('autoHolidayList').innerHTML = `<span style="color:#2c9b8a;">Regular:</span> ${autoRegularInPeriod.map(h => `${h.date.slice(5)} ${h.name}`).join(', ') || '—'}<br><span style="color:#e67e22;">Special:</span> ${autoSpecialInPeriod.map(h => `${h.date.slice(5)} ${h.name}`).join(', ') || '—'}`;
+        
+        if (regularHolidayOccurrences.length > 0) document.getElementById('regularPerDayInfo').innerHTML = `₱${(regularExtraTotal / regularHolidayOccurrences.length).toFixed(2)} avg extra`;
+        else document.getElementById('regularPerDayInfo').innerHTML = `—`;
+        if (specialHolidayOccurrences.length > 0) document.getElementById('specialPerDayInfo').innerHTML = `₱${(specialExtraTotal / specialHolidayOccurrences.length).toFixed(2)} avg extra`;
+        else document.getElementById('specialPerDayInfo').innerHTML = `—`;
+        
+        document.getElementById('holidayBreakdownLog').innerHTML = holidayBreakdownEntries.length > 0 ? `<strong>📌 Combined Holiday Breakdown</strong><br>• ${holidayBreakdownEntries.join('<br>• ')}` : `📭 No holidays in this period.`;
+        document.getElementById('netPayAmount').innerText = `₱${netPay.toFixed(2)}`;
+        document.getElementById('ndPercentLabel').innerText = getNDPercentLabel();
+    }
+    
+    function resetAllData() { if (confirm("Reset ALL data to defaults?")) { localStorage.removeItem('payslipProData'); location.reload(); } }
+    
+    function enforceRestDayLimit() {
+        const checkboxes = document.querySelectorAll('#restDaysGroup input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.addEventListener('change', function() {
+            let checkedCount = 0; checkboxes.forEach(c => { if(c.checked) checkedCount++; });
+            if (checkedCount > 2) { this.checked = false; alert("Maximum 2 rest days allowed."); }
+            computeFullPayslip(); saveAllData();
+        }));
+    }
+    
+    function bindEvents() {
+        const elements = ['dateFrom', 'dateTo', 'basicMonthly', 'allowanceMonthly', 'additionalMonthly', 'ndPercent', 'ndHoursPerDay', 'basicPerDayInput', 'allowancePerDayInput', 'additionalPerDayInput', 'nd10PerDayInput', 'nd20PerDayInput', 'ndPercentPerDay'];
+        elements.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', () => { computeFullPayslip(); saveAllData(); }); });
+        document.getElementById('calcBtn').addEventListener('click', computeFullPayslip);
+        document.getElementById('resetBtn').addEventListener('click', resetAllData);
+        enforceRestDayLimit();
+    }
+    
+    loadAllData();
+    if (!document.getElementById('dateFrom').value) { document.getElementById('dateFrom').value = '2026-03-01'; document.getElementById('dateTo').value = '2026-03-31'; }
+    if (!document.getElementById('basicMonthly').value) document.getElementById('basicMonthly').value = '13500';
+    if (!document.getElementById('allowanceMonthly').value) document.getElementById('allowanceMonthly').value = '2500';
+    if (!document.getElementById('additionalMonthly').value) document.getElementById('additionalMonthly').value = '700';
+    if (!document.getElementById('basicPerDayInput').value) document.getElementById('basicPerDayInput').value = '620.68';
+    if (!document.getElementById('allowancePerDayInput').value) document.getElementById('allowancePerDayInput').value = '114.94';
+    if (!document.getElementById('additionalPerDayInput').value) document.getElementById('additionalPerDayInput').value = '32.18';
+    if (!document.getElementById('nd10PerDayInput').value) document.getElementById('nd10PerDayInput').value = '62.07';
+    if (!document.getElementById('nd20PerDayInput').value) document.getElementById('nd20PerDayInput').value = '124.14';
+    if (!document.getElementById('ndHoursPerDay').value) document.getElementById('ndHoursPerDay').value = '8';
+    
+    setInputMode(inputMode);
+    bindEvents();
+    updateDeductionDisplay();
+    updateManualHolidayList();
+    computeFullPayslip();
+</script>
+</body>
+</html>
